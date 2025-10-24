@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Soccer Club Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/index.css" />
+</head>
+<body>
+  <!-- Background layers -->
+  <div id="bg" class="bg" aria-hidden="true"></div>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <!-- Top search bar -->
+  <header class="topbar">
+    <form id="team-form" class="team-form" autocomplete="off">
+      <input
+        id="team-input"
+        type="text"
+        placeholder="Search a club (e.g., Barcelona, Arsenal, Inter Miami)"
+        required
+        aria-label="Team name"
+      />
+    </form>
+  </header>
+
+  <!-- Main content -->
+  <main class="content">
+    <!-- Team header -->
+    <section class="team-header" aria-live="polite">
+      <h1 id="team-name" class="team-title">—</h1>
+      <p id="stadium" class="muted">—</p>
+      <p id="error" class="error" aria-live="assertive"></p>
+    </section>
+
+    <!-- Next match card -->
+    <section class="card" aria-labelledby="next-title">
+      <h2 id="next-title" class="section-title">Next Match</h2>
+      <div id="next-match" class="next-wrap muted">Loading…</div>
+    </section>
+
+    <!-- Recent form (last 5) -->
+    <section class="card" aria-labelledby="form-title">
+      <h2 id="form-title" class="section-title">Recent Form (Last 5)</h2>
+      <div id="recent-form" class="form-wrap"></div>
+    </section>
+
+    <!-- Team bio -->
+    <section class="card" aria-labelledby="bio-title">
+      <h2 id="bio-title" class="section-title">Team Bio</h2>
+      <div id="team-bio" class="bio-grid muted"></div>
+    </section>
+
+    <!-- Key players -->
+    <section class="card" aria-labelledby="players-title">
+      <h2 id="players-title" class="section-title">Key Players</h2>
+      <div id="key-players" class="players-grid"></div>
+    </section>
+  </main>
+
+  <script src="js/index.js" defer></script>
+</body>
+</html>
