@@ -131,9 +131,10 @@ function safeLink(url) {
 function bioItem(label, value) {
   return `<div class="bio-item"><strong>${label}:</strong> <br/> ${value || "—"}</div>`;
 }
+
+// NOTE: Manager/Coach section removed entirely.
 function renderBio(team) {
   const formed = team.intFormedYear ? String(team.intFormedYear) : "—";
-  const manager = team.strManager || team.strCoach || "—";
   const location = team.strStadiumLocation || team.strCountry || "—";
   const website = safeLink(team.strWebsite);
   const twitter = safeLink(team.strTwitter);
@@ -143,7 +144,6 @@ function renderBio(team) {
 
   els.bio.innerHTML = `
     ${bioItem("Founded", formed)}
-    ${bioItem("Manager/Coach", manager)}
     ${bioItem("League", team.strLeague || "—")}
     ${bioItem("Location", location)}
     <div class="bio-item">
@@ -195,11 +195,14 @@ function renderPlayers(players) {
   });
 }
 
-/* ---------- MAIN FLOW with request guard ---------- */
+/* ---------- MAIN FLOW with request guard + SOCCER-only + explicit error ---------- */
 let activeRequestId = 0;
 
 async function showTeam(query) {
   const requestId = ++activeRequestId;
+
+  const notFoundMsg =
+    `No team found for "${query}". That team doesn't exist — please enter a valid SOCCER TEAM.`;
 
   try {
     els.error.textContent = "";
@@ -212,12 +215,16 @@ async function showTeam(query) {
     const tRes = await fetchJSON(API.teamByName(query));
     if (requestId !== activeRequestId) return; // stale
 
-    if (!tRes.teams || !tRes.teams.length)
-      throw new Error(`No team found for "${query}"`);
+    // Keep only soccer clubs to avoid other sports
+    const teams = (tRes.teams || []).filter(
+      (t) => (t.strSport || "").toLowerCase() === "soccer"
+    );
+
+    if (!teams.length) throw new Error(notFoundMsg);
 
     // 2) Choose the best-matching team
-    const team = chooseTeamByName(tRes.teams, query);
-    if (!team) throw new Error(`No team found for "${query}"`);
+    const team = chooseTeamByName(teams, query);
+    if (!team) throw new Error(notFoundMsg);
 
     // Header + BG
     els.name.textContent = team.strTeam || "—";
@@ -236,12 +243,11 @@ async function showTeam(query) {
     if (requestId !== activeRequestId) return; // stale
     renderRecentForm(team, lastRes.results || []);
 
-    // 5) Bio
+    // 5) Bio (manager/coach removed)
     renderBio(team);
 
     // 6) Players (use the CORRECT team.idTeam, and cache-bust)
     const squadUrl = API.squad(team.idTeam);
-    // Debugging aid (visible in console):
     console.log("Squad URL:", squadUrl, "Team:", team.strTeam, "ID:", team.idTeam);
 
     const squadRes = await fetchJSON(squadUrl);
@@ -251,7 +257,13 @@ async function showTeam(query) {
   } catch (err) {
     if (requestId !== activeRequestId) return; // stale
     console.error(err);
-    els.error.textContent = err.message || "Failed to load team.";
+    const msg =
+      err && err.message && /SOCCER TEAM/.test(err.message)
+        ? err.message
+        : err?.message || "Failed to load team.";
+    els.error.textContent = msg;
+    els.name.textContent = "—";
+    els.stadium.textContent = "—";
     els.next.textContent = "—";
     els.formWrap.innerHTML = "";
     els.bio.innerHTML = "";
